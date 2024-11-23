@@ -22,14 +22,13 @@ DOT_COLOR = (255, 0, 0)
 RED = (255, 0, 0)
 BACKGROUND_COLOR = (255, 255, 255)
 
-
+# для рисование 
 DOT_RADIUS = 5
 DOT_INTERVAL = 0.1
-NEARBY_DOT_COUNT = 3
-NEARBY_DOT_DISTANCE = 20
+
+# для вычисления
 EPSILON = 30
 MIN_SAMPLES = 5
-
 
 def draw_dot(surface, position, color):
     pygame.draw.circle(surface, color, position, DOT_RADIUS)
@@ -58,12 +57,13 @@ def generate_nearby_dots(main_dot, count, max_distance, existing_dots):
 
     return nearby_dots
 
-
+# имплементация dbscan
 def dbscan(dots, epsilon, min_samples):
     labels = [-1] * len(dots)
     visited = [False] * len(dots)
     cluster_id = 0
 
+    # соседи точки idx по epsilon
     def region_query(idx):
         neighbors = []
         for i, dot in enumerate(dots):
@@ -71,6 +71,7 @@ def dbscan(dots, epsilon, min_samples):
                 neighbors.append(i)
         return neighbors
 
+    # расширение кластера, если удовлетворяет условиям
     def expand_cluster(idx, neighbors, cluster_id):
         labels[idx] = cluster_id
         queue = deque(neighbors)
@@ -84,6 +85,7 @@ def dbscan(dots, epsilon, min_samples):
             if labels[current_idx] == -1:
                 labels[current_idx] = cluster_id
 
+    # основной цикл
     for i in range(len(dots)):
         if not visited[i]:
             visited[i] = True
@@ -96,7 +98,7 @@ def dbscan(dots, epsilon, min_samples):
 
     return labels
 
-
+# реализация dbscan из sklearn
 def sklearn_dbscan(dots, epsilon, min_samples):
 
     dots_array = np.array(dots)
@@ -104,7 +106,7 @@ def sklearn_dbscan(dots, epsilon, min_samples):
     labels = db.fit_predict(dots_array)
     return labels
 
-
+# перерисовка кластера со случайными цветами
 def redraw_clusters(screen, labels, dots):
     cluster_colors = {}
     for i in range(len(labels)):
@@ -160,7 +162,7 @@ def main():
                     last_dot_time = current_time
 
                     nearby_dots = generate_nearby_dots(
-                        mouse_pos, NEARBY_DOT_COUNT, NEARBY_DOT_DISTANCE, dots)
+                        mouse_pos, MIN_SAMPLES, EPSILON, dots)
                     for dot in nearby_dots:
                         draw_dot(screen, dot, DOT_COLOR)
                         dots.append(dot)

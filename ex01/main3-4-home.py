@@ -10,6 +10,7 @@ iris = load_iris()
 dots = iris.data
 
 
+# функция для расчета WCSS (внутрикластерной суммы квадратов отклонений)
 def compute_wcss(data, centroids, labels):
     wcss = 0
     for i, centroid in enumerate(centroids):
@@ -18,6 +19,7 @@ def compute_wcss(data, centroids, labels):
     return wcss
 
 
+# Функция для выполнения кластеризации методом K-means:
 def k_means(data, k, max_iters=100):
     np.random.seed(42)
     centroids = data[np.random.choice(range(len(data)), size=k, replace=False)]
@@ -32,10 +34,12 @@ def k_means(data, k, max_iters=100):
         for i in range(k):
             cluster_points = data[labels == i]
             if len(cluster_points) == 0:
-
+                # случайная точка
                 new_centroids.append(data[np.random.choice(range(len(data)))])
             else:
+                # среднее всех точек
                 new_centroids.append(cluster_points.mean(axis=0))
+        # обновление центройдов
         new_centroids = np.array(new_centroids)
 
         centroids_history.append(new_centroids.copy())
@@ -46,7 +50,7 @@ def k_means(data, k, max_iters=100):
 
     return centroids, labels, centroids_history
 
-
+# списки для метрик
 wcss_values = []
 silhouette_values = []
 ks = range(2, 10)
@@ -61,6 +65,7 @@ for k in ks:
         silhouette_values.append(-1)
 
 
+# рисуем локоть
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 plt.plot(ks, wcss_values, marker='o')
@@ -68,7 +73,7 @@ plt.title("Elbow Method")
 plt.xlabel("Number of Clusters (k)")
 plt.ylabel("WCSS")
 
-
+# рисуем sihouette_values
 plt.subplot(1, 2, 2)
 plt.plot(ks, silhouette_values, marker='o', color='green')
 plt.title("Silhouette Score")
@@ -76,8 +81,9 @@ plt.xlabel("Number of Clusters (k)")
 plt.ylabel("Silhouette Score")
 plt.show()
 
-
+# точка локтя
 optimal_k_elbow = ks[np.argmin(np.diff(wcss_values)) + 1]
+# пик по sihouette
 optimal_k_silhouette = ks[np.argmax(silhouette_values)]
 
 print(f"Optimal number of clusters based on Elbow Method: {optimal_k_elbow}")
@@ -85,9 +91,11 @@ print(f"Optimal number of clusters based on Silhouette Score: {
       optimal_k_silhouette}")
 
 
+# можем выбрать один из методов
 optimal_k = optimal_k_silhouette
 
 
+# вычисляем k_means
 centroids, labels, centroids_history = k_means(dots, optimal_k)
 
 
@@ -95,7 +103,7 @@ fig, ax = plt.subplots()
 plt.subplots_adjust(bottom=0.2)
 iteration = 0
 
-
+# рисуем итерацию
 def plot_iteration(iteration):
     ax.clear()
     centroids = centroids_history[iteration]
@@ -114,6 +122,7 @@ def plot_iteration(iteration):
 plot_iteration(iteration)
 
 
+# для кнопки next
 def next_iteration(event):
     global iteration
     if iteration < len(centroids_history) - 1:
