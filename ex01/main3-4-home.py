@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
-from sklearn.metrics import silhouette_score
 from sklearn.datasets import load_iris
 
 iris = load_iris()
 
 
 dots = iris.data
+print(dots[:5])
 
 
 # функция для расчета WCSS (внутрикластерной суммы квадратов отклонений)
@@ -50,49 +50,34 @@ def k_means(data, k, max_iters=100):
 
     return centroids, labels, centroids_history
 
+
 # списки для метрик
 wcss_values = []
-silhouette_values = []
 ks = range(2, 10)
 for k in ks:
     centroids, labels, _ = k_means(dots, k)
     wcss_values.append(compute_wcss(dots, centroids, labels))
 
-    if k > 1:
-        silhouette_avg = silhouette_score(dots, labels)
-        silhouette_values.append(silhouette_avg)
-    else:
-        silhouette_values.append(-1)
-
-
 # рисуем локоть
 plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
 plt.plot(ks, wcss_values, marker='o')
 plt.title("Elbow Method")
 plt.xlabel("Number of Clusters (k)")
 plt.ylabel("WCSS")
 
-# рисуем sihouette_values
-plt.subplot(1, 2, 2)
-plt.plot(ks, silhouette_values, marker='o', color='green')
-plt.title("Silhouette Score")
-plt.xlabel("Number of Clusters (k)")
-plt.ylabel("Silhouette Score")
 plt.show()
 
 # точка локтя
-optimal_k_elbow = ks[np.argmin(np.diff(wcss_values)) + 1]
-# пик по sihouette
-optimal_k_silhouette = ks[np.argmax(silhouette_values)]
+wcss_ratios = [wcss_values[i + 1] - wcss_values[i] / wcss_values[i] - wcss_values[i - 1]
+               for i in range(2, len(wcss_values) - 1)]
+
+optimal_k_elbow = ks[np.argmin(wcss_ratios) + 1]
 
 print(f"Optimal number of clusters based on Elbow Method: {optimal_k_elbow}")
-print(f"Optimal number of clusters based on Silhouette Score: {
-      optimal_k_silhouette}")
 
 
 # можем выбрать один из методов
-optimal_k = optimal_k_silhouette
+optimal_k = optimal_k_elbow
 
 
 # вычисляем k_means
@@ -104,6 +89,8 @@ plt.subplots_adjust(bottom=0.2)
 iteration = 0
 
 # рисуем итерацию
+
+
 def plot_iteration(iteration):
     ax.clear()
     centroids = centroids_history[iteration]
